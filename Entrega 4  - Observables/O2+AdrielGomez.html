@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Entregable 2</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/rxjs/6.6.3/rxjs.umd.min.js"></script>
+  </head>
+
+  <body>
+    <input type="text" />
+    <span></span>
+
+    <script>
+      const { Observable, pipe } = rxjs;
+      const { map, tap } = rxjs.operators;
+
+      function espejarInput() {
+        return new Observable((suscriber) => {
+          // funcion que se ejecutara cuando detecte el evento "input"
+          function ateEventInput() {
+            let dato = document.querySelector("input").value;
+
+            if (dato == "error") {
+              suscriber.error("Error de entrada");
+            } else if (dato == "complete") {
+              suscriber.complete();
+            } else {
+              suscriber.next(dato);
+            }
+          }
+
+          // agrego el listener pasandole el evento y la funcion a ejecutar
+          document
+            .querySelector("input")
+            .addEventListener("input", ateEventInput);
+
+          return () => {
+            // elimino el listener y limpio el input
+            document
+              .querySelector("input")
+              .removeEventListener("input", ateEventInput);
+            document.querySelector("input").disabled = true;
+            document.querySelector("span").innerText = "";
+            console.warn("Observable Input return");
+          };
+        });
+      }
+
+      // TODO espejar el dato...
+      let suscriptorEspejarInput = espejarInput()
+        .pipe(
+          map((dato) => dato.split("").reverse()),
+          map((array) => array.join("")),
+          tap((dato) => console.log("pipe:", dato))
+        )
+        .subscribe(
+          (dato) => {
+            // a obtener el input espejado, lo agrego al html
+            document.querySelector("span").innerText = dato;
+          }, //next
+          (error) => {
+            empty();
+            console.error(error);
+          }, //error
+          () => {
+            empty();
+            console.warn("Observable Input Operacion Completada");
+          } //complete
+        );
+
+      //Function para vaciar input
+
+      const empty = () => {
+        document.querySelector("input").value = "";
+      };
+
+      setTimeout(() => {
+        console.warn("Observable Input desubscripción automatica");
+        suscriptorEspejarInput.unsubscribe();
+      }, 30000);
+    </script>
+  </body>
+</html>

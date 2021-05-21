@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <script>
+      /*Classe Usuario*/
+      class Usuario {
+        constructor(nombre, apellido, libros, mascotas) {
+          this.nombre = nombre;
+          this.apellido = apellido;
+          this.libros = libros;
+          this.mascotas = mascotas;
+        }
+        /* Metodos de Usuario */
+        getFullName() {
+          return `${this.nombre} ${this.apellido}`;
+        }
+        addMascota(newPet) {
+          this.mascotas.push(newPet);
+        }
+        getMascotas() {
+          return this.mascotas.length;
+        }
+        addBook(newBook, newAuthor) {
+          this.libros.push({ nombre: newBook, autor: newAuthor });
+        }
+        getBooks() {
+          return this.libros.map((libro) => libro.nombre);
+        }
+      }
+
+      /* Nuevo objeto de Usuario */
+      const Adriel = new Usuario(
+        "Adriel",
+        "Gomez",
+        [
+          {
+            nombre: "Game of Thrones",
+            autor: "George R. R. Martin",
+          },
+          {
+            nombre: "El nombre del viento",
+            autor: "Patrick Rothfuss",
+          },
+        ],
+        ["gato", "perro", "conejo"]
+      );
+
+      /* Testando funcionalidad */
+      console.log(Adriel.mascotas);
+      console.log(Adriel.getFullName());
+      Adriel.addMascota("pajaro");
+      console.log(Adriel.mascotas);
+      console.log(Adriel.getMascotas());
+      Adriel.addBook("Mistborn", "Brandon Sanderson");
+      console.log(Adriel.libros);
+      console.log(Adriel.getBooks());
+    </script>
+  </body>
+</html>
