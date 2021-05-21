@@ -35,7 +35,7 @@ app.get('/items', (req, res) => {
     items: productsNames,
     cantidad: productsNames.length
   }
-  res.json(products)
+  res.send(products)
 })
 
 //Item Random
