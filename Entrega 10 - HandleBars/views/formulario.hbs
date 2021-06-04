@@ -1,0 +1,21 @@
+
+<section style='text-align: center; margin-top: 5rem'>
+      <h2>Ingrese Producto a Agregar</h2>  
+      
+      <form class="container" style="width: 40vw " action="/api/productos/guardar" method="POST">
+        <div class="mb-3">
+          <label for="title" class="form-label">Title:</label>
+          <input type="text" name='title' class="form-control" id="title" aria-describedby="emailHelp" required>
+        </div>
+        <div class="mb-3">
+          <label for="price" class="form-label">Price:</label>
+          <input type="number" name='price' class="form-control" id="price" required>
+        </div>
+        <div class="mb-3">
+          <label for="thumbnail" class="form-label">Link image:</label>
+          <input type="text" name='thumbnail' class="form-control" id="thumbnail" required>
+          
+        </div>
+        <button type="submit" class="btn btn-primary">Enviar</button>
+      </form>
+    </section>
