@@ -119,16 +119,16 @@ router.put('/productos/actualizar/:id', middleWareId, (req, res) => {
 })
 //url a formulario para cargar productos
 app.get('/productos/cargar', (req, res) => {
-  res.render('formulario.pug')
+  res.render('formulario')
 })
 app.get('/productos/vista', (req, res) => {
-  res.render('index.pug', { productos: PRODUCTOS, hayProductos: PRODUCTOS.length > 0 ? true : false })
+  res.render('index', { productos: PRODUCTOS, hayProductos: PRODUCTOS.length > 0 ? true : false })
 })
 
 
 
 //Motor de plantilla
-app.set('view engine', 'pug')
+app.set('view engine', 'ejs')
 //Ubicacion de plantillas
 app.set('views', './views')
 //Espacio publico
