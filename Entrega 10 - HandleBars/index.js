@@ -122,7 +122,7 @@ app.get('/productos/cargar', (req, res) => {
   res.render('formulario')
 })
 app.get('/productos/vista', (req, res) => {
-  res.render('vistas', { productos: PRODUCTOS, hayProductos: PRODUCTOS.length > 0 ? true : false })
+  res.render('index.pug', { productos: PRODUCTOS, hayProductos: PRODUCTOS.length > 0 ? true : false })
 })
 
 
