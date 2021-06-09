@@ -3,8 +3,7 @@ const app = express()
 //Routers
 const router = express.Router()
 
-//hanldebars
-const hanldebars = require('express-handlebars')
+
 //Helperjs
 const Helper = require('./Helper')
 
@@ -126,20 +125,10 @@ app.get('/productos/vista', (req, res) => {
   res.render('vistas', { productos: PRODUCTOS, hayProductos: PRODUCTOS.length > 0 ? true : false })
 })
 
-//Handlebars
-app.engine(
-  'hbs',
-  hanldebars({
-    extname: '.hbs',
-    defaultLayout: 'index.hbs',
-    layoutsDir: __dirname + '/views/layouts',
-    partialsDir: __dirname + '/views/partials'
 
-  })
-)
 
 //Motor de plantilla
-app.set('view engine', 'hbs')
+app.set('view engine', 'pug')
 //Ubicacion de plantillas
 app.set('views', './views')
 //Espacio publico
