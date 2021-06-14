@@ -121,10 +121,7 @@ router.put('/productos/actualizar/:id', middleWareId, (req, res) => {
     console.log(`Ha ocurrido un error: ${err}`)
   }
 })
-//url a formulario para cargar productos
-app.get('/productos/cargar', (req, res) => {
-  res.render('formulario', { productos: PRODUCTOS, hayProductos: PRODUCTOS.length > 0 ? true : false })
-})
+//url a vista de productos
 app.get('/productos/vista', (req, res) => {
   res.render('vistas', { productos: PRODUCTOS, hayProductos: PRODUCTOS.length > 0 ? true : false })
 })
@@ -161,48 +158,24 @@ const server = http.listen(8080, () => {
   console.log(`Servidor inicializado en el puerto ${server.address().port}`)
 })
 
-app.get('/', (req, res) => {
-  res.render('layouts/index')
-})
 
 //Socket
-const mensajes = []
-
-/* io.on('connection', socket => {
-  console.log(`nuevo cliente: ${socket.id}`)
-  socket.emit('mensajes', mensajes)
-
-  socket.on('mensaje', data => {
-    items.push({ socketId: socket.id, mensaje: data })
-    io.sockets.emit('mensajes', mensajes)
-  })
-  console.log(items)
-
-}) */
 
 io.on('connection', socket => {
   console.log(`nuevo cliente: ${socket.id}`)
   socket.emit('productos', PRODUCTOS)
 
-
-
   socket.on('nuevoProducto', data => {
+    //Agregar Id a producto e insertarlo en PRODUCTOS
     const product = HelperClass.listarProductoAgregado(data)
     PRODUCTOS.push(product)
-    console.log(product)
-    console.log(PRODUCTOS)
-    io.sockets.emit('producto', product)
+    //Enviar todos los productos a los sockets para
+    //que handlebars rerenderice
+    io.sockets.emit('productos', PRODUCTOS)
 
   })
 
 })
-
-
-/* io.on('connection', (socket) => {
-  console.log('nice')
-  console.log(socket.id)
-  io.sockets.emit('productos', PRODUCTOS)
-}) */
 
 
 server.on('error', error => {

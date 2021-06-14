@@ -32,9 +32,9 @@ class Helper {
     product.title = title ? title : product.title
     product.price = price ? price : product.price
     product.thumbnail = img ? img : product.thumbnail
+
     return product
   }
-
 
 }
 

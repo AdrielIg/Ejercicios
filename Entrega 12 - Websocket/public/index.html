@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-+0n0xVW2eSR5OomGNYDnhzAbDsOXxcvSN1TPprVMTNDbiYZCxYbOOl7+AMvyTG2x"
+      crossorigin="anonymous"
+    />
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/handlebars@latest/dist/handlebars.js"></script>
+    <script src="./index.js" defer></script>
+    <title>Guardar producto</title>
+  </head>
+  
+  <body>
+    
+    
+      <section style='text-align: center; margin-top: 5rem'>
+        <h2>Ingrese Producto a Agregar</h2>  
+        
+        <form class="container" id='form-product' style="width: 40vw " action="/api/productos/guardar" method="POST">
+          <div class="mb-3">
+            <label for="title" class="form-label">Title:</label>
+            <input type="text" name='title' class="form-control" id="title" aria-describedby="emailHelp" required>
+          </div>
+          <div class="mb-3">
+            <label for="price" class="form-label">Price:</label>
+            <input type="number" name='price' class="form-control" id="price" required>
+          </div>
+          <div class="mb-3">
+            <label for="thumbnail" class="form-label">Link image:</label>
+            <input type="text" name='thumbnail' class="form-control" id="thumbnail" required>
+            
+          </div>
+          <button type="submit" class="btn btn-primary" id='btn'>Enviar</button>
+        </form>
+      </section>
+      </form>
+
+      <div class="container mt-3">
+        <div class="jumbotron">
+            <h1>Vista de Productos</h1>
+            <br>    
+            <div class="productos-container">
+
+            </div>                    
+        </div>
+      </div>
+    
+  </body>
+</html>
