@@ -163,6 +163,8 @@ const server = http.listen(8080, () => {
 })
 
 
+
+
 //Socket
 
 io.on('connection', socket => {
@@ -183,9 +185,11 @@ io.on('connection', socket => {
   socket.on('newMessage', data => {
     messages.push(data)
     console.log(data)
+
     io.sockets.emit('messages', messages)
 
     //Guardar mensajes en mensajes.txt
+
     fs.appendFile('./messages.txt', JSON.stringify(data), function (err) {
       if (err) {
         console.log(`Error al guardar mensaje: ${err}`)
