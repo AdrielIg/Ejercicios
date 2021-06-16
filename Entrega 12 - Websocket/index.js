@@ -10,6 +10,8 @@ const router = express.Router()
 const hanldebars = require('express-handlebars')
 //Helperjs
 const Helper = require('./Helper')
+//fs
+const fs = require('fs')
 
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
@@ -30,6 +32,8 @@ let PRODUCTOS = [{
   id: 2
 }
 ]
+//Mensajes
+const messages = []
 
 const HelperClass = new Helper(PRODUCTOS)
 
@@ -164,6 +168,7 @@ const server = http.listen(8080, () => {
 io.on('connection', socket => {
   console.log(`nuevo cliente: ${socket.id}`)
   socket.emit('productos', PRODUCTOS)
+  socket.emit('messages', messages)
 
   socket.on('nuevoProducto', data => {
     //Agregar Id a producto e insertarlo en PRODUCTOS
@@ -173,6 +178,20 @@ io.on('connection', socket => {
     //que handlebars rerenderice
     io.sockets.emit('productos', PRODUCTOS)
 
+  })
+
+  socket.on('newMessage', data => {
+    messages.push(data)
+    console.log(data)
+    io.sockets.emit('messages', messages)
+
+    //Guardar mensajes en mensajes.txt
+    fs.appendFile('./messages.txt', JSON.stringify(data), function (err) {
+      if (err) {
+        console.log(`Error al guardar mensaje: ${err}`)
+      }
+
+    })
   })
 
 })

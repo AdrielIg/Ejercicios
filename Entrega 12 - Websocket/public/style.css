@@ -1,0 +1,48 @@
+* {
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 80%;
+}
+
+input {
+  width: 40vw;
+  margin: auto;
+}
+
+.chat-container {
+  display: flex;
+  flex-direction: column;
+  place-items: center;
+  height: 100vh;
+}
+
+.chat {
+  text-align: center;
+  overflow: auto;
+  border: 2px solid black;
+  border-radius: 10px;
+  width: 30vw;
+  min-height: 35vw;
+}
+.mensaje {
+  background-color: rgb(255, 189, 9);
+  border-radius: 10px;
+  width: 80%;
+  margin: 1rem auto;
+  position: relative;
+}
+
+.mensaje::after {
+  content: "";
+  position: absolute;
+  width: 0px;
+  height: 0px;
+  border-right: 8px solid rgb(255, 189, 9);
+  border-bottom: 5px solid transparent;
+  border-top: 5px solid transparent;
+  bottom: 10%;
+  right: 98.5%;
+}

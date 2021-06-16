@@ -3,6 +3,9 @@ const titleInput = document.querySelector('#title');
 const priceInput = document.querySelector('#price');
 const thumbnailInput = document.querySelector('#thumbnail');
 const productosTable = document.querySelector('.productos-container');
+//chat
+const formChat = document.querySelector('#form-chat')
+const chat = document.querySelector('.chat')
 const socket = io();
 
 //Template Handlebars
@@ -40,10 +43,33 @@ form.addEventListener('submit', event => {
   form.reset();
 });
 
+//-------------Chat-------------------
 
+const chatTemplate = Handlebars.compile(`
+  {{#if hayMensajes}}
+    
+      {{#each messages}}
+        <p class="mensaje"><span style="font-weight: bold;color: blue"; >{{this.email}}</span> <span style="color: brown">({{this.time}})</span>: <span style='color: green; font-style: italic'>{{this.text}}</span></p>
+      {{/each}}
+    
+  {{else}}
+    <h3 class="alert alert-warning">No hay mensajes, sé el primero!</h3>
+  {{/if}}
+`)
 
+socket.on('messages', messages => {
+  const html = chatTemplate({ messages, hayMensajes: messages.length > 0 })
+  chat.innerHTML = html
+})
 
-
+formChat.addEventListener('submit', e => {
+  e.preventDefault()
+  const email = document.querySelector('#email').value
+  const text = document.querySelector('#text').value
+  console.log(email, text)
+  socket.emit('newMessage', { email: email, time: new Date().toLocaleString(), text: text })
+  formChat.reset()
+})
 
 
 
