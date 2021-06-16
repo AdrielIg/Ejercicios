@@ -184,7 +184,6 @@ io.on('connection', socket => {
 
   socket.on('newMessage', data => {
     messages.push(data)
-    console.log(data)
 
     io.sockets.emit('messages', messages)
 
