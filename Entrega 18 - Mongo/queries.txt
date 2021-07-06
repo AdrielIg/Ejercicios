@@ -1,0 +1,15 @@
+\\Crear Base de datos
+use prueba
+
+//Crear collecion y agregar items
+db.prueba.insert({nombre: "Fideos", categoria: "Harina", stock: 20})
+db.prueba.insert({nombre: "Leche", categoria: "Lacteos", stock: 30})
+db.prueba.insert({nombre: "Crema", categoria: "Lacteos", stock: 15})
+
+\\Listar items
+db.prueba.find()
+
+//Items agregados
+{ "_id" : ObjectId("60e4cacd17f41c48e30f581c"), "nombre" : "Fideos", "categoria" : "Harina", "stock" : 20 }
+{ "_id" : ObjectId("60e4cad717f41c48e30f581d"), "nombre" : "Leche", "categoria" : "Lacteos", "stock" : 30 }
+{ "_id" : ObjectId("60e4cadf17f41c48e30f581e"), "nombre" : "Crema", "categoria" : "Lacteos", "stock" : 15 }
