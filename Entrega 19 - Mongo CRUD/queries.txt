@@ -21,5 +21,49 @@ db.productos.insert([
 
 //Mensajes:
 db.mensajes.insert([
- 
+  {email: "pepe@hotmail.com", text: "Hola gente", time: ISODate()},
+  {email: "juan98@hotmail.com", text: "Holaaa", time: ISODate()},
+  {email: "jonykpo@hotmail.com", text: "Cuanto cuesta esto?", time: ISODate()},
+  {email: "uhlala@hotmail.com", text: "Muy caro", time: ISODate()},
+  {email: "batman@hotmail.com", text: "Vive la vida loca", time: ISODate()},
 ])
+
+//Listar documentos (hasta 20)
+db.productos.find()
+db.mensajes.find()
+
+//Contar documentos
+db.productos.count()
+db.mensajes.count()
+
+//Agregar producto a collection
+db.productos.insertOne({ title: "Little Nightmares", thumbnail: "link-img", price: 4800 })
+
+//Filtros
+//Menor a mil
+db.productos.find({"price": {$lt: 1000}})
+//Entre 1000 a 3000
+db.productos.find({$and: [{"price": {$gt: 1000}}, {"price": {$lt: 3000}}]})
+//Mayor a 3000
+db.productos.find({"price": {$gt: 3000}})
+
+//Agregar stock
+db.productos.updateMany({}, {$set: {"stock": 100}})
+
+//Cambiar stock
+db.productos.updateMany({"price": {$gt: 4000}}, {$set: {"stock": 0}})
+
+//Delete 
+db.productos.deleteMany({"price": {$lt: 1000}})
+
+//Create user
+use admin
+db.createUser(
+  {
+    user: "pepe",
+    pwd: "asd456",
+    roles: [
+      {role: "read", db:"ecommerce"}
+    ]
+  }
+)
