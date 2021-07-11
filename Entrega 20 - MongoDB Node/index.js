@@ -17,6 +17,19 @@ const Chat = require('./modelos/Chat')
 //Model Product
 const Products = require('./modelos/Products')
 
+//Mongoose
+const mongoose = require('mongoose')
+//Config
+const config = require('./Config/config.json')
+
+//Connect database
+async function connectDB() {
+  await mongoose.connect(config.MONGO_URL, { useNewUrlParser: true, useUnifiedTopology: true });
+
+  console.log('conexion a la base de datos realizada!');
+}
+connectDB()
+
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 app.use('/static', express.static(__dirname + '/public'));
@@ -72,7 +85,7 @@ router.get('/productos/listar', async (req, res) => {
 })
 //Listar Productos por ID
 router.get('/productos/listar/:id', middleWareId, async (req, res) => {
-  const productId = Number(req.params.id)
+  const productId = req.params.id
   try {
     const product = await Products.getProduct(productId)
     if (!product) {
@@ -93,19 +106,22 @@ router.post('/productos/guardar', async (req, res) => {
   try {
     //Agregamos id
     const { title, price, thumbnail } = req.body
-    await Product.addProduct(title, price, thumbnail)
+
+    await Products.addProduct(title, price, thumbnail)
+
     res.status(200).redirect('/productos/cargar')
 
   }
   catch (err) {
     console.log(`Ha ocurrido un error: ${err}`)
+
   }
 })
 
 //Borrar un producto segun id
 router.delete('/productos/borrar/:id', middleWareId, async (req, res) => {
   try {
-    const id = Number(req.params.id)
+    const id = req.params.id
     console.log('borrar')
     const productDeleted = await Products.deleteProduct(id)
     res.status(200).json(productDeleted)
@@ -119,7 +135,7 @@ router.delete('/productos/borrar/:id', middleWareId, async (req, res) => {
 //Actualizar producto por Id
 router.put('/productos/actualizar/:id', middleWareId, async (req, res) => {
   try {
-    const id = parseInt(req.params.id)
+    const id = req.params.id
     const { title, price, thumbnail } = req.body
     const product = await Products.updateProduct(id, title, price, thumbnail)
     res.send(product)
