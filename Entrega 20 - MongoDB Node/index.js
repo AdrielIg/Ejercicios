@@ -23,12 +23,12 @@ const mongoose = require('mongoose')
 const config = require('./Config/config.json')
 
 //Connect database
-async function connectDB() {
+/* async function connectDB() {
   await mongoose.connect(config.MONGO_URL, { useNewUrlParser: true, useUnifiedTopology: true });
 
   console.log('conexion a la base de datos realizada!');
 }
-connectDB()
+connectDB() */
 
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
