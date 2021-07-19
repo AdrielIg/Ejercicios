@@ -22,13 +22,16 @@ const mongoose = require('mongoose')
 //Config
 const config = require('./Config/config.json')
 
+/* Faker */
+const faker = require('faker');
+
 //Connect database
-/* async function connectDB() {
+async function connectDB() {
   await mongoose.connect(config.MONGO_URL, { useNewUrlParser: true, useUnifiedTopology: true });
 
   console.log('conexion a la base de datos realizada!');
 }
-connectDB() */
+connectDB()
 
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
@@ -145,8 +148,24 @@ router.put('/productos/actualizar/:id', middleWareId, async (req, res) => {
   }
 })
 //url a vista de productos
-app.get('/productos/vista', (req, res) => {
-  res.render('vistas', { productos: PRODUCTOS, hayProductos: PRODUCTOS.length > 0 ? true : false })
+app.get('/productos/vista-test', async (req, res) => {
+  const n = parseInt(req.query.cant)
+  let hayProds = true
+  let productos;
+  if (n <= 0) {
+
+    hayProds = false
+  } else if (!n) {
+    productos = await Products.generateValues(10)
+  }
+  else {
+    productos = await Products.generateValues(n)
+
+  }
+
+
+
+  res.render('vistas', { productos: productos, hayProductos: hayProds })
 })
 
 //Handlebars
