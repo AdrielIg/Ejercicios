@@ -4,11 +4,11 @@ const mysql = {
   connection: {
     host: '127.0.0.1',
     user: 'root',
-    password: '',
+    password: ';Mermelada;1997',
     database: 'productos',
   }
 };
 
 
 
-module.exports = { mysql }
+module.exports = mysql

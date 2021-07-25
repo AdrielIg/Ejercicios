@@ -24,6 +24,8 @@ const config = require('./Config/config.json')
 
 /* Faker */
 const faker = require('faker');
+/* Normalizer */
+const { normalize, schema } = require('normalizr');
 
 //Connect database
 async function connectDB() {
@@ -204,6 +206,32 @@ const server = http.listen(8080, () => {
 
 
 //Socket
+const obtainMsg = async () => {
+  const ms = await Chat.readMessages()
+  /* let obj = {}
+  let counter = 0
+
+  const allmsg = ms.forEach(msj => {
+    obj[counter] = msj
+    counter++
+
+  }) */
+  console.log(ms)
+  const author = new schema.Entity('author', { idAttribute: 'email' });
+
+  const comment = new schema.Entity('text', {
+    commenter: author
+  })
+
+  const normalizedData = normalize(ms, comment)
+
+  console.log(JSON.stringify(normalizedData, null, 3));
+  fs.writeFileSync('./normalizado.json', JSON.stringify(normalizedData, null, 3));
+
+}
+
+
+obtainMsg()
 
 io.on('connection', async (socket) => {
   console.log(`nuevo cliente: ${socket.id}`)
@@ -237,8 +265,9 @@ io.on('connection', async (socket) => {
   }) */
 
   socket.on('newMessage', async (data) => {
-    const { email, text, time } = data
-    await Chat.addMessage(email, text, time)
+    const { email, text, firstName, lastName } = data
+    console.log(`la data es ${JSON.stringify(data)}`)
+    await Chat.addMessage(email, text, firstName, lastName)
     io.sockets.emit('messages', await Chat.readMessages())
   })
 
