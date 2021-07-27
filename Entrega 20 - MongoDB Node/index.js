@@ -26,6 +26,11 @@ const config = require('./Config/config.json')
 const faker = require('faker');
 /* Normalizer */
 const { normalize, schema } = require('normalizr');
+/* Cookie parser */
+const cookieParser = require('cookie-parser')
+/* const session = require('express-session') */
+
+
 
 //Connect database
 async function connectDB() {
@@ -38,6 +43,17 @@ connectDB()
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 app.use('/static', express.static(__dirname + '/public'));
+app.use(cookieParser())
+/* app.use(session({
+  secret: 'secreto',
+  resave: false,
+  rolling: true,
+  maxAge: 3000,
+  saveUninitialized: false,
+  cookie: {
+    expires: 3000
+  }
+})) */
 
 
 //Productos
@@ -60,7 +76,7 @@ const HelperClass = new Helper(PRODUCTOS)
 
 const middleWareId = async (req, res, next) => {
   const id = Number(req.params.id)
-  const product = Products.getProduct(id)
+  const product = await Products.getProduct(id)
   if (product) {
     next()
   }
@@ -70,6 +86,59 @@ const middleWareId = async (req, res, next) => {
 
 }
 
+const auth = async (req, res, next) => {
+  const name = req.body.name
+  if (name) {
+    next()
+  }
+  else {
+    console.log('No se ingreso un nombre')
+    res.redirect('/login')
+  }
+}
+
+app.get('/login', (req, res) => {
+
+  res.render('formulario')
+})
+
+app.post('/login', auth, async (req, res) => {
+  try {
+
+    const name = req.body.name
+    if (!name) {
+      res.status(401).json({ error: 'No se envio un nombre para el login' })
+      return
+    }
+    else {
+      res.cookie('name', name, { maxAge: 6000 * 60000 }).redirect('/')
+      return
+    }
+  }
+  catch (err) {
+    console.log(err)
+  }
+})
+
+
+
+app.get('/logout', (req, res) => {
+  const name = req.cookies.name;
+
+  res.clearCookie('name').render('logout', { name });
+
+});
+
+app.get('/', (req, res) => {
+
+
+  res.sendFile('public/index.html', { root: __dirname })
+
+})
+
+
+
+
 //Listar Productos
 
 
@@ -77,10 +146,13 @@ router.get('/productos/listar', async (req, res) => {
   try {
     const productos = await Products.getProducts()
     if (!productos.length) {
+
       res.json({ error: 'No hay productos cargados' })
     }
     else {
+
       res.json(productos)
+
     }
 
   }
@@ -208,6 +280,30 @@ const server = http.listen(8080, () => {
 //Socket
 const obtainMsg = async () => {
   const ms = await Chat.readMessages()
+  console.log(ms)
+  const mensajesConId = {
+    id: 'mensajes',
+    mensajes: ms.map(mensaje => ({ ...mensaje.author }))
+  }
+
+  const schemaAuthor = new schema.Entity('author', {}, { idAttribute: 'email' });
+
+  // Definimos un esquema de mensaje
+  const schemaMensaje = new schema.Entity('post', {
+    author: schemaAuthor
+  }, { idAttribute: '_id' })
+
+  // Definimos un esquema de posts
+  const schemaMensajes = new schema.Entity('posts', {
+    mensajes: [schemaMensaje]
+  }, { idAttribute: 'id' })
+
+
+  let mensajesConIdN = normalize(mensajesConId, schemaMensajes)
+
+  console.log(JSON.stringify(mensajesConIdN, null, 3));
+  fs.writeFileSync('./normalizado.json', JSON.stringify(mensajesConIdN, null, 3));
+
   /* let obj = {}
   let counter = 0
 
@@ -216,7 +312,7 @@ const obtainMsg = async () => {
     counter++
 
   }) */
-  console.log(ms)
+  /* console.log(ms)
   const author = new schema.Entity('author', { idAttribute: 'email' });
 
   const comment = new schema.Entity('text', {
@@ -224,14 +320,13 @@ const obtainMsg = async () => {
   })
 
   const normalizedData = normalize(ms, comment)
+ */
 
-  console.log(JSON.stringify(normalizedData, null, 3));
-  fs.writeFileSync('./normalizado.json', JSON.stringify(normalizedData, null, 3));
 
 }
 
 
-obtainMsg()
+/* obtainMsg() */
 
 io.on('connection', async (socket) => {
   console.log(`nuevo cliente: ${socket.id}`)

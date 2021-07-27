@@ -46,3 +46,20 @@ input {
   bottom: 10%;
   right: 98.5%;
 }
+.welcome {
+  min-height: 8rem;
+}
+.wrapper-logout {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+}
+.logout {
+  text-decoration: none;
+  color: black;
+  text-transform: uppercase;
+  font-size: 1.2rem;
+  background: orange;
+  padding: 0.5rem 1rem;
+  border-radius: 5px;
+}

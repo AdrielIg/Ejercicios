@@ -1,0 +1,26 @@
+<style>
+    .exit{
+      background-color: lightcoral;
+      text-align: center;
+    }
+    .goodbye{
+      font-size: 1.6rem;
+      padding: 1rem 2rem
+    }
+</style>
+<div class="exit"> 
+  <h1 class="goodbye">Hasta luego {{name}}</h1>
+</div>
+<script>
+  const isLogout = (x) => {
+  if (x.includes('logout')) {
+    setTimeout(()=> {
+      window.location = '/login'
+    },2000)
+    console.log('estasn en lopgout')
+  }
+  return
+}
+isLogout(window.location.href)
+</script>
+

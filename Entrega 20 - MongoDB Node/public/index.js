@@ -7,6 +7,8 @@ const productosTable = document.querySelector('.productos-container');
 const formChat = document.querySelector('#form-chat')
 const chat = document.querySelector('.chat')
 const socket = io();
+//welcome
+const welcome = document.querySelector('.welcome')
 
 //Template Handlebars
 const productoHtml = Handlebars.compile(`
@@ -47,12 +49,12 @@ form.addEventListener('submit', event => {
 
 const chatTemplate = Handlebars.compile(`
   {{#if hayMensajes}}
-    
+
       {{#each messages}}
         <p class="mensaje"><span style="font-weight: bold;color: blue"; >{{this.author.email}}</span>
         <span style="font-weight: bold;color: red";>{{this.author.firstName}} </span> <span style="color: brown">({{this.author.time}})</span>: <span style='color: green; font-style: italic'>{{this.text}}</span></p>
       {{/each}}
-    
+
   {{else}}
     <h3 class="alert alert-warning">No hay mensajes, sé el primero!</h3>
   {{/if}}
@@ -60,7 +62,6 @@ const chatTemplate = Handlebars.compile(`
 
 socket.on('messages', messages => {
   const html = chatTemplate({ messages, hayMensajes: messages.length > 0 })
-  console.log(messages)
   chat.innerHTML = html
 })
 
@@ -74,5 +75,67 @@ formChat.addEventListener('submit', e => {
   socket.emit('newMessage', { email: email, text: text, firstName: firstName, lastName: lastName })
   formChat.reset()
 })
+
+
+/* ------------------Cookies ----------------------- */
+
+const welcomeTemplate = Handlebars.compile(`
+  {{#if cookieName}}
+  <div class="wrapper-logout" style= "background: lightgreen; text-align: center; padding: 1rem 2rem">
+    <h3 style="font-size: 2rem; "> Bienvenido {{cookieName}}</h3>
+    <a href='/logout' class="logout">Logout</a>
+  </div>
+  {{else}}
+    <h3 class="alert alert-warning"  style="text-align: center">No tienes permiso para acceder!</h3>
+  {{/if}}
+`)
+/* To obtain cookie name */
+function getCookie(name) {
+  var nameEQ = name + "=";
+  var ca = document.cookie.split(';');
+  for (var i = 0; i < ca.length; i++) {
+    var c = ca[i];
+    while (c.charAt(0) == ' ') c = c.substring(1, c.length);
+    if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length, c.length);
+  }
+  return null;
+}
+
+const cookieName = getCookie('name')
+const welcomeHTML = welcomeTemplate({ cookieName: cookieName })
+welcome.innerHTML = welcomeHTML
+
+if (!cookieName) {
+  window.location = '/login'
+  const auth = document.querySelector('.auth')
+  auth.style.display = 'none'
+
+}
+
+function inactivityTime() {
+  var time;
+
+  // events
+  window.onload = resetTime;
+  window.onclick = resetTime;
+  window.onkeypress = resetTime;
+  window.ontouchstart = resetTime;
+  window.onmousemove = resetTime;
+  window.onmousedown = resetTime;
+  window.addEventListener('scroll', resetTime, true);
+
+  function logout() {
+    window.location = '/logout'
+  }
+
+  function resetTime() {
+    clearTimeout(time);
+    time = setTimeout(logout, 6000 * 10);
+  }
+
+};
+
+// run the function
+inactivityTime();
 
 
