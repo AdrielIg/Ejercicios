@@ -24,7 +24,7 @@ const schema = mongoose.Schema({
 
 });
 
-const Productos = mongoose.model('productos', schema)
+const Productos = mongoose.model('products', schema)
 
 async function getProducts() {
   try {
