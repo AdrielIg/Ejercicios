@@ -28,7 +28,7 @@ const faker = require('faker');
 const { normalize, schema } = require('normalizr');
 /* Cookie parser */
 const cookieParser = require('cookie-parser')
-/* const session = require('express-session') */
+const session = require('express-session')
 
 
 
@@ -44,16 +44,15 @@ app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 app.use('/static', express.static(__dirname + '/public'));
 app.use(cookieParser())
-/* app.use(session({
+app.use(session({
   secret: 'secreto',
   resave: false,
-  rolling: true,
-  maxAge: 3000,
-  saveUninitialized: false,
-  cookie: {
-    expires: 3000
-  }
-})) */
+  saveUninitialized: false
+
+}))
+
+/* req.session.name */
+let sessionName;
 
 
 //Productos
@@ -87,8 +86,8 @@ const middleWareId = async (req, res, next) => {
 }
 
 const auth = async (req, res, next) => {
-  const name = req.body.name
-  if (name) {
+
+  if (req.session.name) {
     next()
   }
   else {
@@ -98,11 +97,12 @@ const auth = async (req, res, next) => {
 }
 
 app.get('/login', (req, res) => {
-
+  console.log(`get/login ${req.session.name}`)
   res.render('formulario')
 })
 
-app.post('/login', auth, async (req, res) => {
+
+app.post('/login', async (req, res) => {
   try {
 
     const name = req.body.name
@@ -111,7 +111,9 @@ app.post('/login', auth, async (req, res) => {
       return
     }
     else {
-      res.cookie('name', name, { maxAge: 6000 * 60000 }).redirect('/')
+      req.session.name = name
+      res.redirect('/')
+      console.log(`post/login ${req.session.name}`)
       return
     }
   }
@@ -123,16 +125,22 @@ app.post('/login', auth, async (req, res) => {
 
 
 app.get('/logout', (req, res) => {
-  const name = req.cookies.name;
+  const name = req.session.name
+  console.log(`logout ${req.session.name}`)
+  req.session.destroy(err => {
+    if (!err) res.render('logout', { name })
+    else res.send({ status: 'Logout ERROR', body: err })
+  })
+  /* const name = req.cookies.name;
 
-  res.clearCookie('name').render('logout', { name });
+  res.clearCookie('name').render('logout', { name }); */
 
 });
 
-app.get('/', (req, res) => {
+app.get('/', auth, (req, res) => {
 
-
-  res.sendFile('public/index.html', { root: __dirname })
+  console.log(`home ${req.session.name}`)
+  res.cookie('name', req.session.name).sendFile('public/index.html', { root: __dirname })
 
 })
 
@@ -326,12 +334,14 @@ const obtainMsg = async () => {
 }
 
 
+
 /* obtainMsg() */
 
 io.on('connection', async (socket) => {
   console.log(`nuevo cliente: ${socket.id}`)
   socket.emit('productos', await Products.getProducts())
   socket.emit('messages', await Chat.readMessages())
+
 
   socket.on('nuevoProducto', async (data) => {
     const { title, price, thumbnail } = data

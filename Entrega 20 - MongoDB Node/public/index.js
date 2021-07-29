@@ -9,6 +9,9 @@ const chat = document.querySelector('.chat')
 const socket = io();
 //welcome
 const welcome = document.querySelector('.welcome')
+socket.on('sessionName', name => {
+  console.log(name)
+})
 
 //Template Handlebars
 const productoHtml = Handlebars.compile(`
@@ -105,12 +108,12 @@ const cookieName = getCookie('name')
 const welcomeHTML = welcomeTemplate({ cookieName: cookieName })
 welcome.innerHTML = welcomeHTML
 
-if (!cookieName) {
+/* if (!cookieName) {
   window.location = '/login'
   const auth = document.querySelector('.auth')
   auth.style.display = 'none'
 
-}
+} */
 
 function inactivityTime() {
   var time;
