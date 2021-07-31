@@ -29,7 +29,9 @@ const { normalize, schema } = require('normalizr');
 /* Cookie parser */
 const cookieParser = require('cookie-parser')
 const session = require('express-session')
-
+/* mongo connect */
+const MongoStore = require('connect-mongo')
+const advancedOptions = { useNewUrlParser: true, useUnifiedTopology: true }
 
 
 //Connect database
@@ -45,9 +47,19 @@ app.use(express.urlencoded({ extended: true }))
 app.use('/static', express.static(__dirname + '/public'));
 app.use(cookieParser())
 app.use(session({
-  secret: 'secreto',
+  store: MongoStore.create({
+    //En Atlas connect App :  Make sure to change the node version to 2.2.12:
+    mongoUrl: 'mongodb+srv://adriel:;Mermelada;1997@cluster0.afgyq.mongodb.net/sesiones?retryWrites=true&w=majority',
+    mongoOptions: advancedOptions
+  }),
+  secret: 'secret',
   resave: false,
-  saveUninitialized: false
+  saveUninitialized: false,
+  rolling: true,
+  cookie: {
+    maxAge: 4000,
+  }
+
 
 }))
 
@@ -97,7 +109,7 @@ const auth = async (req, res, next) => {
 }
 
 app.get('/login', (req, res) => {
-  console.log(`get/login ${req.session.name}`)
+
   res.render('formulario')
 })
 
@@ -113,7 +125,7 @@ app.post('/login', async (req, res) => {
     else {
       req.session.name = name
       res.redirect('/')
-      console.log(`post/login ${req.session.name}`)
+
       return
     }
   }
@@ -126,20 +138,18 @@ app.post('/login', async (req, res) => {
 
 app.get('/logout', (req, res) => {
   const name = req.session.name
-  console.log(`logout ${req.session.name}`)
+
   req.session.destroy(err => {
     if (!err) res.render('logout', { name })
     else res.send({ status: 'Logout ERROR', body: err })
   })
-  /* const name = req.cookies.name;
 
-  res.clearCookie('name').render('logout', { name }); */
 
 });
 
 app.get('/', auth, (req, res) => {
 
-  console.log(`home ${req.session.name}`)
+
   res.cookie('name', req.session.name).sendFile('public/index.html', { root: __dirname })
 
 })
@@ -154,13 +164,10 @@ router.get('/productos/listar', async (req, res) => {
   try {
     const productos = await Products.getProducts()
     if (!productos.length) {
-
       res.json({ error: 'No hay productos cargados' })
     }
     else {
-
       res.json(productos)
-
     }
 
   }
