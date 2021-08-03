@@ -21,6 +21,8 @@ const Products = require('./modelos/Products')
 const mongoose = require('mongoose')
 //Config
 const config = require('./Config/config.json')
+/* Import users schema mongo */
+const User = require('./modelos/users')
 
 /* Faker */
 const faker = require('faker');
@@ -32,11 +34,17 @@ const session = require('express-session')
 /* mongo connect */
 const MongoStore = require('connect-mongo')
 const advancedOptions = { useNewUrlParser: true, useUnifiedTopology: true }
-
+/* import atlas */
+const atlasUrl = require('./Config/config.json').Mongo_Atlas
+/* import passport */
+const passport = require('passport');
+const LocalStrategy = require('passport-local').Strategy;
+/* Bcrypt */
+const bCrypt = require('bCrypt')
 
 //Connect database
 async function connectDB() {
-  await mongoose.connect(config.MONGO_URL, { useNewUrlParser: true, useUnifiedTopology: true });
+  await mongoose.connect(config.Mongo_Atlas, { useNewUrlParser: true, useUnifiedTopology: true });
 
   console.log('conexion a la base de datos realizada!');
 }
@@ -48,42 +56,117 @@ app.use('/static', express.static(__dirname + '/public'));
 app.use(cookieParser())
 app.use(session({
   store: MongoStore.create({
-    //En Atlas connect App :  Make sure to change the node version to 2.2.12:
-    mongoUrl: 'mongodb+srv://adriel:;Mermelada;1997@cluster0.afgyq.mongodb.net/sesiones?retryWrites=true&w=majority',
+    mongoUrl: atlasUrl,
     mongoOptions: advancedOptions
   }),
   secret: 'secret',
-  resave: false,
+  resave: true,
   saveUninitialized: false,
   rolling: true,
   cookie: {
-    maxAge: 4000,
+    maxAge: 10 * 60 * 60,
   }
 
 
 }))
+// Initialize Passport and restore authentication state, if any, from the
+// session.
+app.use(passport.initialize());
+app.use(passport.session());
 
 /* req.session.name */
 let sessionName;
 
-
-//Productos
-let PRODUCTOS = [{
-  title: 'Lapiz',
-  price: 58,
-  thumbnail: 'https://cdn3.iconfinder.com/data/icons/education-209/64/pencil-pen-stationery-school-128.png',
-  id: 1
+/* PASSPORT DECLARATION */
+passport.use('login', new LocalStrategy({
+  passReqToCallback: true
 },
-{
-  title: 'Regla',
-  price: 28,
-  thumbnail: 'https://cdn3.iconfinder.com/data/icons/education-209/64/ruler-triangle-stationary-school-128.png',
-  id: 2
+  function (req, username, password, done) {
+    //Buscando nombre en base de datos
+    User.findOne({ 'username': username },
+      function (err, user) {
+        //Si ocurre un error
+        if (err)
+          return done(err);
+        // si el usuario no existe
+        if (!user) {
+          console.log('Usuario no encontrado: ' + username);
+          return done(null, false, console.log('message', 'User Not found.'));
+        }
+        // Si usuario existe pero la contrasenia es erronea
+        if (!isValidPassword(user, password)) {
+          console.log('Invalid Password');
+          return done(null, false, console.log('message', 'Invalid Password'));
+        }
+        // Contrasenia y usuario correctos
+        sessionName = username
+        return done(null, user);
+      }
+    );
+  })
+);
+/* Compara hash */
+const isValidPassword = function (user, password) {
+  return bCrypt.compareSync(password, user.password);
 }
-]
 
+passport.use('signup', new LocalStrategy({
+  passReqToCallback: true
+},
+  function (req, username, password, done) {
+    findOrCreateUser = function () {
+      // busca usuario por usuario en mongo
+      User.findOne({ 'username': username }, function (err, user) {
+        // En caso de error
+        if (err) {
+          console.log('Error en SignUp: ' + err);
+          return done(err);
+        }
+        // Si ya existe ese usuario
+        if (user) {
+          console.log('Este nombre de usuario ya existe');
+          return done(null, false, console.log('message', 'Este usuario ya existe '));
+        } else {
+          //creamos nuevo usuario
+          let newUser = new User();
+          // pasamos los datos
+          newUser.username = username;
+          //hasheamos la contrasenia
+          newUser.password = createHash(password);
 
-const HelperClass = new Helper(PRODUCTOS)
+          // guardar usuario
+          newUser.save(function (err) {
+            if (err) {
+              console.log('Error en guardar usuario: ' + err);
+              throw err;
+            }
+            console.log('Usario registrado exitosamente');
+            return done(null, newUser);
+          });
+        }
+      });
+    }
+    // Delay the execution of findOrCreateUser and execute 
+    // the method in the next tick of the event loop
+    process.nextTick(findOrCreateUser);
+  })
+)
+// Generador de hash
+const createHash = function (password) {
+  return bCrypt.hashSync(password, bCrypt.genSaltSync(10), null);
+}
+
+/* Serializar */
+passport.serializeUser(function (user, done) {
+  done(null, user._id);
+});
+/* Deserializar */
+passport.deserializeUser(function (id, done) {
+  User.findById(id, function (err, user) {
+    done(err, user);
+  });
+});
+
 
 const middleWareId = async (req, res, next) => {
   const id = Number(req.params.id)
@@ -98,59 +181,63 @@ const middleWareId = async (req, res, next) => {
 }
 
 const auth = async (req, res, next) => {
-
-  if (req.session.name) {
+  if (req.isAuthenticated()) {
     next()
   }
   else {
-    console.log('No se ingreso un nombre')
     res.redirect('/login')
   }
+
 }
 
 app.get('/login', (req, res) => {
-
   res.render('formulario')
 })
 
+app.get('/signup', (req, res) => {
+  if (req.isAuthenticated()) {
 
-app.post('/login', async (req, res) => {
+    const user = req.user;
+    console.log('user logueado');
+    res.redirect('/')
+  }
+
+  res.render('signup')
+})
+
+app.post('/login', passport.authenticate('login', { failureRedirect: '/faillogin' }), async (req, res) => {
   try {
+    res.redirect('/')
+    return
 
-    const name = req.body.name
-    if (!name) {
-      res.status(401).json({ error: 'No se envio un nombre para el login' })
-      return
-    }
-    else {
-      req.session.name = name
-      res.redirect('/')
-
-      return
-    }
   }
   catch (err) {
     console.log(err)
   }
 })
 
-
+app.post('/signup', passport.authenticate('signup', { failureRedirect: '/failsignup' }), (req, res) => {
+  res.redirect('/login')
+})
 
 app.get('/logout', (req, res) => {
-  const name = req.session.name
-
-  req.session.destroy(err => {
-    if (!err) res.render('logout', { name })
-    else res.send({ status: 'Logout ERROR', body: err })
-  })
-
-
+  req.logout()
+  res.render('logout', { name: sessionName })
 });
+
+/* Error routes */
+app.get('/faillogin', (req, res) => {
+  res.render('faillogin')
+})
+app.get('/failsignup', (req, res) => {
+  res.render('failsignup')
+})
+
 
 app.get('/', auth, (req, res) => {
 
 
-  res.cookie('name', req.session.name).sendFile('public/index.html', { root: __dirname })
+  res.cookie('name', sessionName).sendFile('public/index.html', { root: __dirname })
 
 })
 
