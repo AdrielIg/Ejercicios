@@ -41,6 +41,15 @@ const passport = require('passport');
 const LocalStrategy = require('passport-local').Strategy;
 /* Bcrypt */
 const bCrypt = require('bCrypt')
+/* FACEBOOK STRATEGY */
+const FacebookStrategy = require('passport-facebook').Strategy;
+const dotenv = require('dotenv');
+
+dotenv.config();
+
+// Variables de entorno
+const FACEBOOK_CLIENT_ID = process.env.FACEBOOK_CLIENT_ID;
+const FACEBOOK_CLIENT_SECRET = process.env.FACEBOOK_CLIENT_SECRET;
 
 //Connect database
 async function connectDB() {
@@ -156,17 +165,41 @@ const createHash = function (password) {
   return bCrypt.hashSync(password, bCrypt.genSaltSync(10), null);
 }
 
-/* Serializar */
+/* --------------PASSPORT FACEBOOK------------------ */
+passport.use(new FacebookStrategy({
+  clientID: FACEBOOK_CLIENT_ID,
+  clientSecret: FACEBOOK_CLIENT_SECRET,
+  callbackURL: '/auth/facebook/callback',
+  profileFields: ['id', 'displayName', 'name', 'photos', 'emails'],
+  scope: ['email']
+}, function (accessToken, refreshToken, profile, done) {
+  /* console.log(JSON.stringify(profile, null, 3)) */;
+  let userProfile = profile;
+  return done(null, userProfile);
+}));
+
+/* Passport Facebook */
 passport.serializeUser(function (user, done) {
-  done(null, user._id);
+  done(null, user);
 });
+
+passport.deserializeUser(function (user, done) {
+  done(null, user);
+});
+
+
+/* Passport Local */
+/* Serializar */
+/* passport.serializeUser(function (user, done) {
+  done(null, user._id);
+}); */
 /* Deserializar */
-passport.deserializeUser(function (id, done) {
+/* passport.deserializeUser(function (id, done) {
   User.findById(id, function (err, user) {
     done(err, user);
   });
 });
-
+ */
 
 const middleWareId = async (req, res, next) => {
   const id = Number(req.params.id)
@@ -189,6 +222,20 @@ const auth = async (req, res, next) => {
   }
 
 }
+
+/* ---------------------------------------------------- */
+
+app.get('/auth/facebook', passport.authenticate('facebook'));
+
+app.get('/auth/facebook/callback', passport.authenticate('facebook',
+  {
+    successRedirect: '/',
+    failureRedirect: '/faillogin'
+  }
+));
+
+
+/* ---------------------------------------------------------- */
 
 app.get('/login', (req, res) => {
   res.render('formulario')
@@ -233,11 +280,24 @@ app.get('/failsignup', (req, res) => {
   res.render('failsignup')
 })
 
+app.get('/data', auth, (req, res) => {
+  const data = req.user._json
+
+  const dataUser = {
+    name: data.name,
+    email: data.email,
+    pic: data.picture.data.url
+  }
+
+
+  res.send(dataUser)
+
+})
 
 app.get('/', auth, (req, res) => {
 
 
-  res.cookie('name', sessionName).sendFile('public/index.html', { root: __dirname })
+  res.sendFile('public/index.html', { root: __dirname })
 
 })
 

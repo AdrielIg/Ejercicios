@@ -83,9 +83,13 @@ formChat.addEventListener('submit', e => {
 /* ------------------Cookies ----------------------- */
 
 const welcomeTemplate = Handlebars.compile(`
-  {{#if cookieName}}
+  {{#if name}}
   <div class="wrapper-logout" style= "background: lightgreen; text-align: center; padding: 1rem 2rem">
-    <h3 style="font-size: 2rem; "> Bienvenido {{cookieName}}</h3>
+  <div class="wrapper-data">
+    <h3 style="font-size: 2rem; "> Bienvenido {{name}}</h3>
+    <h3 style="font-size: 2rem; "> Emial: {{email}}</h3>
+    <img src={{pic}} alt="profile facebook">
+  </div>
     <a href='/logout' class="logout">Logout</a>
   </div>
   {{else}}
@@ -93,7 +97,7 @@ const welcomeTemplate = Handlebars.compile(`
   {{/if}}
 `)
 /* To obtain cookie name */
-function getCookie(name) {
+/* function getCookie(name) {
   var nameEQ = name + "=";
   var ca = document.cookie.split(';');
   for (var i = 0; i < ca.length; i++) {
@@ -104,9 +108,10 @@ function getCookie(name) {
   return null;
 }
 
-const cookieName = getCookie('name')
-const welcomeHTML = welcomeTemplate({ cookieName: cookieName })
-welcome.innerHTML = welcomeHTML
+const cookieName = getCookie('name') */
+
+
+
 
 /* if (!cookieName) {
   window.location = '/login'
@@ -115,8 +120,24 @@ welcome.innerHTML = welcomeHTML
 
 } */
 
+async function fetchText() {
+  let response = await fetch('/data');
+  let data = await response.json();
+  const { name, email, pic } = data
+
+
+  const welcomeHTML = welcomeTemplate({ name: name, email: email, pic: pic })
+  welcome.innerHTML = welcomeHTML
+}
+
+fetchText()
+
+
+
+
+
 function inactivityTime() {
-  var time;
+  let time;
 
   // events
   window.onload = resetTime;
@@ -140,5 +161,6 @@ function inactivityTime() {
 
 // run the function
 inactivityTime();
+
 
 
