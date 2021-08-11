@@ -1,5 +1,6 @@
 const express = require('express')
 const app = express()
+const path = require("path");
 //socket
 const http = require('http').Server(app)
 const io = require('socket.io')(http)
@@ -44,12 +45,15 @@ const bCrypt = require('bCrypt')
 /* FACEBOOK STRATEGY */
 const FacebookStrategy = require('passport-facebook').Strategy;
 const dotenv = require('dotenv');
+/* Fork */
+const { fork } = require('child_process');
 
 dotenv.config();
 
 // Variables de entorno
-const FACEBOOK_CLIENT_ID = process.env.FACEBOOK_CLIENT_ID;
-const FACEBOOK_CLIENT_SECRET = process.env.FACEBOOK_CLIENT_SECRET;
+const PORT = process.argv[2] || 8080
+const FACEBOOK_CLIENT_ID = process.argv[3] || process.env.FACEBOOK_CLIENT_ID;
+const FACEBOOK_CLIENT_SECRET = process.argv[4] || process.env.FACEBOOK_CLIENT_SECRET;
 
 //Connect database
 async function connectDB() {
@@ -78,6 +82,9 @@ app.use(session({
 
 
 }))
+
+
+
 // Initialize Passport and restore authentication state, if any, from the
 // session.
 app.use(passport.initialize());
@@ -404,6 +411,42 @@ app.get('/productos/vista-test', async (req, res) => {
   res.render('vistas', { productos: productos, hayProductos: hayProds })
 })
 
+const folder = path.basename(__dirname)
+
+/* info process */
+app.get('/info', (req, res) => {
+
+  const args = process.argv
+  const sistema = process.platform
+  const version = process.version
+  const memory = process.memoryUsage()
+  const path = process.cwd()
+  const id = process.pid
+  const carpeta = folder
+  console.log(folder)
+  res.render('info', { args, sistema, version, memory, path, id, carpeta })
+})
+/* Random numbers */
+
+app.get('/randoms', (req, res) => {
+  const num = req.query.cant || 100000000
+  try {
+    const computo = fork('./computo')
+    computo.send(num)
+    computo.on('message', numeros => {
+      console.log(numeros)
+      res.render('randoms', { numeros: numeros })
+    })
+
+  }
+  catch (err) {
+    console.log(err)
+  }
+
+})
+
+
+
 //Handlebars
 app.engine(
   'hbs',
@@ -432,7 +475,7 @@ app.use('/api', router)
 
 
 //Server
-const server = http.listen(8080, () => {
+const server = http.listen(PORT, () => {
   console.log(`Servidor inicializado en el puerto ${server.address().port}`)
 })
 
