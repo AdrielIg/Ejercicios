@@ -588,12 +588,12 @@ console.log(process.argv[3])
 if (modo === 'fork') {
   //Server
   const server = http.listen(PORT, () => {
-    console.log(`Servidor inicializado en el puerto ${server.address().port}`)
+    console.log(`Servidor iniciado en puerto: ${server.address().port}`)
   })
 
 
   server.on('error', error => {
-    console.log(`Error en servidor: ${error}`)
+    console.log(`Error: ${error}`)
   })
 
   process.on('exit', code => {
@@ -613,12 +613,12 @@ if (modo === 'cluster') {
   } else {
     const server = http.listen(PORT, () => {
       console.log(
-        `Servidor inicializado en el puerto ${server.address().port}.`
+        `Servidor iniciado en puerto: ${server.address().port}.`
       );
     });
 
-    server.on('error', () => {
-      console.log('Error del servidor.');
+    server.on('error', (err) => {
+      console.log(`Error: ${err}`);
     });
 
     process.on('exit', code => {
