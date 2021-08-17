@@ -4,6 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "pm2cluster": "pm2 start ./index.js --name='Server1' --watch -i max ",
+    "pm2fork": "pm2 start ./index.js --name='Server1' --watch ",
+    "forever": "forever start ./index.js",
     "ServerES6toES5": "node_modules/.bin/babel ./index.es6.js -o ./server.js",
     "start": "node index.js",
     "test": "echo \"Error: no test specified\" && exit 1"

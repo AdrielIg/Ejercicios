@@ -47,13 +47,18 @@ const FacebookStrategy = require('passport-facebook').Strategy;
 const dotenv = require('dotenv');
 /* Fork */
 const { fork } = require('child_process');
+/* cluster */
+const cluster = require('cluster');
+const os = require('os');
 
 dotenv.config();
 
+
+
 // Variables de entorno
 const PORT = process.argv[2] || 8080
-const FACEBOOK_CLIENT_ID = process.argv[3] || process.env.FACEBOOK_CLIENT_ID;
-const FACEBOOK_CLIENT_SECRET = process.argv[4] || process.env.FACEBOOK_CLIENT_SECRET;
+const FACEBOOK_CLIENT_ID = process.argv[4] || process.env.FACEBOOK_CLIENT_ID;
+const FACEBOOK_CLIENT_SECRET = process.argv[5] || process.env.FACEBOOK_CLIENT_SECRET;
 
 //Connect database
 async function connectDB() {
@@ -423,8 +428,8 @@ app.get('/info', (req, res) => {
   const path = process.cwd()
   const id = process.pid
   const carpeta = folder
-  console.log(folder)
-  res.render('info', { args, sistema, version, memory, path, id, carpeta })
+  const numPro = os.cpus().length
+  res.render('info', { args, sistema, version, memory, path, id, carpeta, numPro })
 })
 /* Random numbers */
 
@@ -474,10 +479,6 @@ app.use('/api', router)
 
 
 
-//Server
-const server = http.listen(PORT, () => {
-  console.log(`Servidor inicializado en el puerto ${server.address().port}`)
-})
 
 
 
@@ -576,8 +577,52 @@ io.on('connection', async (socket) => {
 })
 
 
-server.on('error', error => {
-  console.log(`Error en servidor: ${error}`)
-})
 
 
+
+
+/* CLUSTER AND FORK */
+const modo = process.argv[3] || 'fork';
+console.log(process.argv[3])
+
+if (modo === 'fork') {
+  //Server
+  const server = http.listen(PORT, () => {
+    console.log(`Servidor inicializado en el puerto ${server.address().port}`)
+  })
+
+
+  server.on('error', error => {
+    console.log(`Error en servidor: ${error}`)
+  })
+
+  process.on('exit', code => {
+    console.log('Exit code -> ', code)
+  })
+}
+
+if (modo === 'cluster') {
+  if (cluster.isMaster) {
+    for (let i = 0; i < os.cpus().length; i++) {
+      cluster.fork();
+    }
+
+    cluster.on('exit', (worker, code, signal) => {
+      console.log(`worker ${worker.process.pid} died`);
+    })
+  } else {
+    const server = http.listen(PORT, () => {
+      console.log(
+        `Servidor inicializado en el puerto ${server.address().port}.`
+      );
+    });
+
+    server.on('error', () => {
+      console.log('Error del servidor.');
+    });
+
+    process.on('exit', code => {
+      console.log('Exit code -> ', code)
+    })
+  }
+}
