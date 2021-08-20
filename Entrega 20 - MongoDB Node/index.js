@@ -50,6 +50,17 @@ const { fork } = require('child_process');
 /* cluster */
 const cluster = require('cluster');
 const os = require('os');
+/* compression */
+const compression = require('compression')
+/* log4js */
+const log4js = require('./log4js')
+const loggerError = log4js.getLogger('err')
+const loggerWarn = log4js.getLogger('warn')
+const loggerConsole = log4js.getLogger('consola')
+loggerError.error('Ha ocurrido un error (prueba)')
+loggerConsole.info('Informacion (prueba)')
+loggerWarn.warn('Advertencia!!! (prueba)')
+
 
 dotenv.config();
 
@@ -63,11 +74,10 @@ const FACEBOOK_CLIENT_SECRET = process.argv[5] || process.env.FACEBOOK_CLIENT_SE
 //Connect database
 async function connectDB() {
   await mongoose.connect(config.Mongo_Atlas, { useNewUrlParser: true, useUnifiedTopology: true });
-
-  console.log('conexion a la base de datos realizada!');
+  loggerConsole.info('conexion a la base de datos realizada!');
 }
 connectDB()
-
+app.use(compression())
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 app.use('/static', express.static(__dirname + '/public'));
@@ -111,12 +121,12 @@ passport.use('login', new LocalStrategy({
           return done(err);
         // si el usuario no existe
         if (!user) {
-          console.log('Usuario no encontrado: ' + username);
+          loggerWarn.warn('Usuario no encontrado: ' + username);
           return done(null, false, console.log('message', 'User Not found.'));
         }
         // Si usuario existe pero la contrasenia es erronea
         if (!isValidPassword(user, password)) {
-          console.log('Invalid Password');
+          loggerWarn.warn('Invalid Password');
           return done(null, false, console.log('message', 'Invalid Password'));
         }
         // Contrasenia y usuario correctos
@@ -145,7 +155,7 @@ passport.use('signup', new LocalStrategy({
         }
         // Si ya existe ese usuario
         if (user) {
-          console.log('Este nombre de usuario ya existe');
+          loggerWarn.warn('Este nombre de usuario ya existe');
           return done(null, false, console.log('message', 'Este usuario ya existe '));
         } else {
           //creamos nuevo usuario
@@ -161,7 +171,7 @@ passport.use('signup', new LocalStrategy({
               console.log('Error en guardar usuario: ' + err);
               throw err;
             }
-            console.log('Usario registrado exitosamente');
+            loggerConsole.info('Usario registrado exitosamente');
             return done(null, newUser);
           });
         }
@@ -257,7 +267,7 @@ app.get('/signup', (req, res) => {
   if (req.isAuthenticated()) {
 
     const user = req.user;
-    console.log('user logueado');
+    loggerConsole.info('user logueado');
     res.redirect('/')
   }
 
@@ -271,7 +281,8 @@ app.post('/login', passport.authenticate('login', { failureRedirect: '/faillogin
 
   }
   catch (err) {
-    console.log(err)
+    loggerConsole.error(err)
+    loggerError.error(err)
   }
 })
 
@@ -331,7 +342,8 @@ router.get('/productos/listar', async (req, res) => {
 
   }
   catch (err) {
-    console.log(`Ha ocurrido un error: ${err}`)
+    loggerError.error(`Ha ocurrido un error: ${err}`)
+    loggerError.error(err)
   }
 })
 //Listar Productos por ID
@@ -347,7 +359,7 @@ router.get('/productos/listar/:id', middleWareId, async (req, res) => {
     }
   }
   catch (err) {
-    console.log(`Ha ocurrido un error: ${err}`)
+    loggerError.error(err)
   }
 })
 
@@ -364,7 +376,7 @@ router.post('/productos/guardar', async (req, res) => {
 
   }
   catch (err) {
-    console.log(`Ha ocurrido un error: ${err}`)
+    loggerError.error(err)
 
   }
 })
@@ -373,12 +385,11 @@ router.post('/productos/guardar', async (req, res) => {
 router.delete('/productos/borrar/:id', middleWareId, async (req, res) => {
   try {
     const id = req.params.id
-    console.log('borrar')
     const productDeleted = await Products.deleteProduct(id)
     res.status(200).json(productDeleted)
   }
   catch (err) {
-    console.log(`Ha ocurrido un error: ${err}`)
+    loggerError.error(`Ha ocurrido un error: ${err}`)
   }
 })
 
@@ -392,7 +403,7 @@ router.put('/productos/actualizar/:id', middleWareId, async (req, res) => {
     res.send(product)
   }
   catch (err) {
-    console.log(`Ha ocurrido un error: ${err}`)
+    loggerError.error(`Ha ocurrido un error: ${err}`)
   }
 })
 //url a vista de productos
@@ -439,13 +450,13 @@ app.get('/randoms', (req, res) => {
     const computo = fork('./computo')
     computo.send(num)
     computo.on('message', numeros => {
-      console.log(numeros)
+      loggerConsole.info(numeros)
       res.render('randoms', { numeros: numeros })
     })
 
   }
   catch (err) {
-    console.log(err)
+    loggerError.error(err)
   }
 
 })
@@ -483,57 +494,7 @@ app.use('/api', router)
 
 
 
-//Socket
-const obtainMsg = async () => {
-  const ms = await Chat.readMessages()
-  console.log(ms)
-  const mensajesConId = {
-    id: 'mensajes',
-    mensajes: ms.map(mensaje => ({ ...mensaje.author }))
-  }
 
-  const schemaAuthor = new schema.Entity('author', {}, { idAttribute: 'email' });
-
-  // Definimos un esquema de mensaje
-  const schemaMensaje = new schema.Entity('post', {
-    author: schemaAuthor
-  }, { idAttribute: '_id' })
-
-  // Definimos un esquema de posts
-  const schemaMensajes = new schema.Entity('posts', {
-    mensajes: [schemaMensaje]
-  }, { idAttribute: 'id' })
-
-
-  let mensajesConIdN = normalize(mensajesConId, schemaMensajes)
-
-  console.log(JSON.stringify(mensajesConIdN, null, 3));
-  fs.writeFileSync('./normalizado.json', JSON.stringify(mensajesConIdN, null, 3));
-
-  /* let obj = {}
-  let counter = 0
-
-  const allmsg = ms.forEach(msj => {
-    obj[counter] = msj
-    counter++
-
-  }) */
-  /* console.log(ms)
-  const author = new schema.Entity('author', { idAttribute: 'email' });
-
-  const comment = new schema.Entity('text', {
-    commenter: author
-  })
-
-  const normalizedData = normalize(ms, comment)
- */
-
-
-}
-
-
-
-/* obtainMsg() */
 
 io.on('connection', async (socket) => {
   console.log(`nuevo cliente: ${socket.id}`)
@@ -588,12 +549,12 @@ console.log(process.argv[3])
 if (modo === 'fork') {
   //Server
   const server = http.listen(PORT, () => {
-    console.log(`Servidor iniciado en puerto: ${server.address().port}`)
+    loggerConsole.info(`Servidor iniciado en puerto: ${server.address().port}`)
   })
 
 
   server.on('error', error => {
-    console.log(`Error: ${error}`)
+    loggerError.error(err)
   })
 
   process.on('exit', code => {
@@ -612,13 +573,13 @@ if (modo === 'cluster') {
     })
   } else {
     const server = http.listen(PORT, () => {
-      console.log(
+      loggerConsole.info(
         `Servidor iniciado en puerto: ${server.address().port}.`
       );
     });
 
     server.on('error', (err) => {
-      console.log(`Error: ${err}`);
+      loggerError.error(err)
     });
 
     process.on('exit', code => {
